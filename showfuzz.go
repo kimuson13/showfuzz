@@ -10,9 +10,9 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const doc = "showfuzz is ..."
+const doc = "showfuzz is the tool that analyze functions can do fuzz test"
 
-// Analyzer is ...
+// Analyzer is checking the function whether do fuzz test
 var Analyzer = &analysis.Analyzer{
 	Name: "showfuzz",
 	Doc:  doc,
