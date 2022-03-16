@@ -40,12 +40,15 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				if fd, ok := n.Obj.Decl.(*ast.FuncDecl); ok {
 					if len(fd.Type.Params.List) != 0 {
 						for _, l := range fd.Type.Params.List {
-							if at, ok := l.Type.(*ast.ArrayType); ok {
-								if !isFuzzable(pass.TypesInfo.TypeOf(at.Elt).Underlying()) {
+							switch t := l.Type.(type) {
+							case *ast.ArrayType:
+								if !isFuzzable(pass.TypesInfo.TypeOf(t.Elt).Underlying()) {
 									return
 								}
-							} else if !isFuzzable(pass.TypesInfo.TypeOf(l.Type).Underlying()) {
-								return
+							case *ast.Ident:
+								if !isFuzzable(pass.TypesInfo.TypeOf(l.Type).Underlying()) {
+									return
+								}
 							}
 						}
 
