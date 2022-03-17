@@ -1,4 +1,4 @@
-# showfuzz
+# showfuzz [![Go Reference](https://pkg.go.dev/badge/github.com/kimuson13/showfuzz.svg)](https://pkg.go.dev/github.com/kimuson13/showfuzz)
 showfuzz is report to stdout the functions that can be fuzzing test
 ## Caution
 showfuzz is intended to be used for Go1.18 or higher
