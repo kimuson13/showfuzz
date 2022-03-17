@@ -14,7 +14,7 @@ import (
 const doc = "showfuzz is the tool that analyze functions can do fuzz test"
 
 type Results struct {
-	events []event
+	Events []event
 }
 
 type event struct {
@@ -80,7 +80,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 						}
 
 						pass.Reportf(n.Pos(), "%s can fuzz test", fd.Name)
-						results.events = append(results.events, e)
+						results.Events = append(results.Events, e)
 					}
 				}
 			}
