@@ -21,6 +21,4 @@ func maybeFuzz(Maybe) {}
 
 func cantFuzz1(error) {}
 
-func cantFuzz2(any) {}
-
 func cantFuzz3() {}

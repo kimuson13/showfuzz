@@ -3,6 +3,7 @@ package showfuzz
 import (
 	"go/ast"
 	"go/types"
+	"reflect"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -12,6 +13,21 @@ import (
 
 const doc = "showfuzz is the tool that analyze functions can do fuzz test"
 
+type Results struct {
+	Events []Event
+}
+
+type Event struct {
+	Name string
+	Args []TypeInfo
+}
+
+type TypeInfo struct {
+	TypName        string
+	UnderlyingName string
+	IsByteArr      bool
+}
+
 // Analyzer is checking the function whether do fuzz test
 var Analyzer = &analysis.Analyzer{
 	Name: "showfuzz",
@@ -20,6 +36,7 @@ var Analyzer = &analysis.Analyzer{
 	Requires: []*analysis.Analyzer{
 		inspect.Analyzer,
 	},
+	ResultType: reflect.TypeOf(new(Results)),
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
@@ -33,33 +50,44 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		return nil, nil
 	}
 
+	results := &Results{}
+
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
+		e := Event{}
 		switch n := n.(type) {
 		case *ast.Ident:
 			if n.Obj != nil {
 				if fd, ok := n.Obj.Decl.(*ast.FuncDecl); ok {
 					if len(fd.Type.Params.List) != 0 {
+						e.Name = strings.Title(fd.Name.Name)
 						for _, l := range fd.Type.Params.List {
 							switch t := l.Type.(type) {
 							case *ast.ArrayType:
-								if !isFuzzable(pass.TypesInfo.TypeOf(t.Elt).Underlying()) {
+								typ := pass.TypesInfo.TypeOf(t.Elt)
+								if !types.Identical(typ.Underlying(), types.Typ[types.Byte]) {
 									return
 								}
+
+								e.Args = append(e.Args, TypeInfo{typ.String(), typ.Underlying().String(), true})
 							case *ast.Ident:
-								if !isFuzzable(pass.TypesInfo.TypeOf(l.Type).Underlying()) {
+								typ := pass.TypesInfo.TypeOf(l.Type)
+								if !isFuzzable(typ.Underlying()) {
 									return
 								}
+
+								e.Args = append(e.Args, TypeInfo{typ.String(), typ.Underlying().String(), false})
 							}
 						}
 
 						pass.Reportf(n.Pos(), "%s can fuzz test", fd.Name)
+						results.Events = append(results.Events, e)
 					}
 				}
 			}
 		}
 	})
 
-	return nil, nil
+	return results, nil
 }
 
 func isFuzzable(typ types.Type) bool {
