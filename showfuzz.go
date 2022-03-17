@@ -46,11 +46,11 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		(*ast.Ident)(nil),
 	}
 
-	if strings.HasSuffix(pass.Pkg.Name(), "_test") {
-		return nil, nil
-	}
-
 	results := &Results{}
+
+	if strings.HasSuffix(pass.Pkg.Name(), "_test") {
+		return results, nil
+	}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
 		e := Event{}
