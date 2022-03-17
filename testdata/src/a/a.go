@@ -19,8 +19,6 @@ func canFuzz4(MyInt) {} // want "can fuzz test"
 
 func maybeFuzz(Maybe) {}
 
-func cantFuzz4([]string) {}
-
 func cantFuzz1(error) {}
 
 func cantFuzz3() {}
