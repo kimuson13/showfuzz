@@ -52,7 +52,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 							}
 						}
 
-						pass.Reportf(n.Pos(), "can fuzz test")
+						pass.Reportf(n.Pos(), "%s can fuzz test", fd.Name)
 					}
 				}
 			}
