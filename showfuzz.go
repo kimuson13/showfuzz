@@ -59,7 +59,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			if n.Obj != nil {
 				if fd, ok := n.Obj.Decl.(*ast.FuncDecl); ok {
 					if len(fd.Type.Params.List) != 0 {
-						e.Name = strings.Title(fd.Name.Name)
+						e.Name = fd.Name.Name
 						for _, l := range fd.Type.Params.List {
 							switch t := l.Type.(type) {
 							case *ast.ArrayType:
