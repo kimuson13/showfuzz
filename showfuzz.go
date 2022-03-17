@@ -14,18 +14,18 @@ import (
 const doc = "showfuzz is the tool that analyze functions can do fuzz test"
 
 type Results struct {
-	Events []event
+	Events []Event
 }
 
-type event struct {
+type Event struct {
 	Name string
-	Args []tp
+	Args []TypeInfo
 }
 
-type tp struct {
+type TypeInfo struct {
 	TypName        string
 	UnderlyingName string
-	IsArr          bool
+	IsByteArr      bool
 }
 
 // Analyzer is checking the function whether do fuzz test
@@ -53,29 +53,29 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	results := &Results{}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		e := event{}
+		e := Event{}
 		switch n := n.(type) {
 		case *ast.Ident:
 			if n.Obj != nil {
 				if fd, ok := n.Obj.Decl.(*ast.FuncDecl); ok {
 					if len(fd.Type.Params.List) != 0 {
-						e.Name = fd.Name.Name
+						e.Name = strings.Title(fd.Name.Name)
 						for _, l := range fd.Type.Params.List {
 							switch t := l.Type.(type) {
 							case *ast.ArrayType:
 								typ := pass.TypesInfo.TypeOf(t.Elt)
-								if !isFuzzable(typ.Underlying()) {
+								if !types.Identical(typ.Underlying(), types.Typ[types.Byte]) {
 									return
 								}
 
-								e.Args = append(e.Args, tp{typ.String(), typ.Underlying().String(), true})
+								e.Args = append(e.Args, TypeInfo{typ.String(), typ.Underlying().String(), true})
 							case *ast.Ident:
 								typ := pass.TypesInfo.TypeOf(l.Type)
 								if !isFuzzable(typ.Underlying()) {
 									return
 								}
 
-								e.Args = append(e.Args, tp{typ.String(), typ.Underlying().String(), false})
+								e.Args = append(e.Args, TypeInfo{typ.String(), typ.Underlying().String(), false})
 							}
 						}
 
