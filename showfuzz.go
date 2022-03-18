@@ -43,7 +43,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	nodeFilter := []ast.Node{
-		(*ast.Ident)(nil),
+		(*ast.FuncDecl)(nil),
 	}
 
 	results := &Results{}
@@ -55,34 +55,30 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
 		e := Event{}
 		switch n := n.(type) {
-		case *ast.Ident:
-			if n.Obj != nil {
-				if fd, ok := n.Obj.Decl.(*ast.FuncDecl); ok {
-					if len(fd.Type.Params.List) != 0 {
-						e.Name = fd.Name.Name
-						for _, l := range fd.Type.Params.List {
-							switch t := l.Type.(type) {
-							case *ast.ArrayType:
-								typ := pass.TypesInfo.TypeOf(t.Elt)
-								if !types.Identical(typ.Underlying(), types.Typ[types.Byte]) {
-									return
-								}
-
-								e.Args = append(e.Args, TypeInfo{typ.String(), typ.Underlying().String(), true})
-							case *ast.Ident:
-								typ := pass.TypesInfo.TypeOf(l.Type)
-								if !isFuzzable(typ.Underlying()) {
-									return
-								}
-
-								e.Args = append(e.Args, TypeInfo{typ.String(), typ.Underlying().String(), false})
-							}
+		case *ast.FuncDecl:
+			if len(n.Type.Params.List) != 0 {
+				e.Name = n.Name.Name
+				for _, l := range n.Type.Params.List {
+					switch t := l.Type.(type) {
+					case *ast.ArrayType:
+						typ := pass.TypesInfo.TypeOf(t.Elt)
+						if !types.Identical(typ.Underlying(), types.Typ[types.Byte]) {
+							return
 						}
 
-						pass.Reportf(n.Pos(), "%s can fuzz test", fd.Name)
-						results.Events = append(results.Events, e)
+						e.Args = append(e.Args, TypeInfo{typ.String(), typ.Underlying().String(), true})
+					case *ast.Ident:
+						typ := pass.TypesInfo.TypeOf(l.Type)
+						if !isFuzzable(typ.Underlying()) {
+							return
+						}
+
+						e.Args = append(e.Args, TypeInfo{typ.String(), typ.Underlying().String(), false})
 					}
 				}
+
+				pass.Reportf(n.Pos(), "%s can fuzz test", n.Name)
+				results.Events = append(results.Events, e)
 			}
 		}
 	})

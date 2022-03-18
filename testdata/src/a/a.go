@@ -7,6 +7,10 @@ type Maybe struct {
 	B error
 }
 
+type NG struct {
+	F func(int, int)
+}
+
 func canFuzz1(a int) error { // want "can fuzz test"
 	return nil
 }
@@ -20,5 +24,16 @@ func canFuzz4(MyInt) {} // want "can fuzz test"
 func maybeFuzz(Maybe) {}
 
 func cantFuzz1(error) {}
+
+func cantFuzz2() {
+	f := func(a int, b int) { // this is not func decl
+		print(a, b)
+	}
+
+	f(1, 2)
+
+	r := NG{f}
+	r.F(1, 2)
+}
 
 func cantFuzz3() {}
